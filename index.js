@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require('dotenv').config()
 const app=express()
 const port=process.env.PORT ||4000
@@ -25,6 +25,13 @@ async function run() {
         //get all parts
         app.get('/parts',async(req,res)=>{
             const result= await partsCollection.find().toArray()
+            res.send(result)
+        })
+        //get one part find by id
+        app.get('/part/:id',async(req,res)=>{
+            const id=req.params
+            const query={_id:ObjectId(id)}
+            const result= await partsCollection.findOne(query)
             res.send(result)
         })
     
