@@ -17,6 +17,21 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+function verifyJWT(req, res, next) {
+  const authHeaders = req.headers.authorization;
+  if (!authHeaders) {
+    return res.status(401).send({ message: "unauthorized access" });
+  }
+  const token = authHeaders.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ message: "forbidden access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
+
 async function run() {
   try {
     await client.connect();
@@ -24,6 +39,19 @@ async function run() {
     const userCollection = client.db("automobile").collection("user");
     const orderCollection = client.db("automobile").collection("order");
     const reviewCollection = client.db("automobile").collection("review");
+
+    const verifyAdmin = async (req, res, next) => {
+      const decodedEmail = req.decoded.email;
+      console.log(decodedEmail);
+      const requesterAccount = await userCollection.findOne({
+        email: decodedEmail,
+      });
+      if (requesterAccount.role === "admin") {
+        next();
+      } else {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+    };
 
     //when user sign in and login then get a token
     app.put("/user/:email", async (req, res) => {
@@ -42,7 +70,7 @@ async function run() {
     });
 
     //added admin role
-    app.put("/user/admin/:email", async (req, res) => {
+    app.put("/user/admin/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const email = req.params.email;
       const query = { email };
       const updateDoc = {
@@ -52,6 +80,14 @@ async function run() {
       res.send(result);
     });
 
+    //check admin
+    app.get("/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = await userCollection.findOne({ email });
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
+    });
+
     //get all users
     app.get("/users", async (req, res) => {
       const result = await userCollection.find().toArray();
@@ -59,9 +95,9 @@ async function run() {
     });
 
     //delete user
-    app.delete("/user/:email", async (req, res) => {
+    app.delete("/user/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const email = req.params.email;
-      const query = {email};
+      const query = { email };
       const result = await userCollection.deleteOne(query);
       res.send(result);
     });
