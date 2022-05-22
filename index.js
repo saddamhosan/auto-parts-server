@@ -25,6 +25,7 @@ async function run() {
       const partsCollection = client.db("automobile").collection("parts");
       const userCollection = client.db("automobile").collection("user");
       const orderCollection = client.db("automobile").collection("order");
+      const reviewCollection = client.db("automobile").collection("review");
 
       //when user sign in and login then get a token
       app.put("/user/:email", async (req, res) => {
@@ -60,28 +61,39 @@ async function run() {
       });
 
       // insert a order
-      app.post('/order', async(req,res)=>{
-        const order=req.body
-        const result = await orderCollection.insertOne(order)
-        res.send(result)
-      })
+      app.post("/order", async (req, res) => {
+        const order = req.body;
+        const result = await orderCollection.insertOne(order);
+        res.send(result);
+      });
 
       //get order filtering by email
-      app.get('/order/:email',async(req,res)=>{
-        const email=req.params.email
-        const query={email}
-        const result=await orderCollection.find(query).toArray()
-        res.send(result)
-      })
+      app.get("/order/:email", async (req, res) => {
+        const email = req.params.email;
+        const query = { email };
+        const result = await orderCollection.find(query).toArray();
+        res.send(result);
+      });
 
       //delete order
-      app.delete('/order/:id',async(req,res)=>{
-        const id=req.params.id
-        console.log(id);
-        const query={_id:ObjectId(id)}
-        const result=await orderCollection.deleteOne(query)
-        res.send(result)
-      })
+      app.delete("/order/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const result = await orderCollection.deleteOne(query);
+        res.send(result);
+      });
+
+      //insert a review
+      app.post("/review", async (req, res) => {
+        const review = req.body;
+        const result = await reviewCollection.insertOne(review);
+        res.send(result);
+      });
+      //get all review
+      app.get("/review", async (req, res) => {
+        const result = await reviewCollection.find().toArray();
+        res.send(result);
+      });
     } finally {
     // await client.close();
   }
