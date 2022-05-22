@@ -24,6 +24,7 @@ async function run() {
       await client.connect();
       const partsCollection = client.db("automobile").collection("parts");
       const userCollection = client.db("automobile").collection("user");
+      const orderCollection = client.db("automobile").collection("order");
 
       //when user sign in and login then get a token
       app.put("/user/:email", async (req, res) => {
@@ -58,6 +59,13 @@ async function run() {
         const result = await partsCollection.findOne(query);
         res.send(result);
       });
+
+      // insert a order
+      app.post('/order', async(req,res)=>{
+        const order=req.body
+        const result = await orderCollection.insertOne(order)
+        res.send(result)
+      })
     } finally {
     // await client.close();
   }
