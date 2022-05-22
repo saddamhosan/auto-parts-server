@@ -30,7 +30,6 @@ async function run() {
       app.put("/user/:email", async (req, res) => {
         const email = req.params.email;
         const user = req.body;
-        console.log(user)
         const query = { email };
         const options = { upsert: true };
         const updateDoc = {
@@ -64,6 +63,23 @@ async function run() {
       app.post('/order', async(req,res)=>{
         const order=req.body
         const result = await orderCollection.insertOne(order)
+        res.send(result)
+      })
+
+      //get order filtering by email
+      app.get('/order/:email',async(req,res)=>{
+        const email=req.params.email
+        const query={email}
+        const result=await orderCollection.find(query).toArray()
+        res.send(result)
+      })
+
+      //delete order
+      app.delete('/order/:id',async(req,res)=>{
+        const id=req.params.id
+        console.log(id);
+        const query={_id:ObjectId(id)}
+        const result=await orderCollection.deleteOne(query)
         res.send(result)
       })
     } finally {
