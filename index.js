@@ -3,6 +3,7 @@ const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 var jwt = require("jsonwebtoken");
+const res = require("express/lib/response");
 const app = express();
 const port = process.env.PORT || 4000;
 const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
@@ -40,6 +41,7 @@ async function run() {
     const userCollection = client.db("automobile").collection("user");
     const orderCollection = client.db("automobile").collection("order");
     const reviewCollection = client.db("automobile").collection("review");
+    const paymentCollection = client.db("automobile").collection("payments");
 
     const verifyAdmin = async (req, res, next) => {
       const decodedEmail = req.decoded.email;
@@ -146,6 +148,23 @@ async function run() {
       const result = await orderCollection.findOne(query);
       res.send(result);
     });
+    //update order and insert payment after payment
+    app.put('/orders/:id',async(req,res)=>{
+      const id=req.params.id
+      const payment=req.body
+      const query={_id:ObjectId(id)}
+      const updatedDoc={
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId
+        }
+      }
+
+      const result=await paymentCollection.insertOne(payment)
+      const updateOrder=await orderCollection.updateOne(query,updatedDoc) 
+      res.send(updatedDoc)
+    })
+
     //payment
     app.post("/create-payment-intent", async (req, res) => {
       const service = req.body;
