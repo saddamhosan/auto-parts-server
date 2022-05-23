@@ -5,6 +5,7 @@ require("dotenv").config();
 var jwt = require("jsonwebtoken");
 const app = express();
 const port = process.env.PORT || 4000;
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 
 //middleware
 app.use(cors());
@@ -42,7 +43,6 @@ async function run() {
 
     const verifyAdmin = async (req, res, next) => {
       const decodedEmail = req.decoded.email;
-      console.log(decodedEmail);
       const requesterAccount = await userCollection.findOne({
         email: decodedEmail,
       });
@@ -136,6 +136,27 @@ async function run() {
       const query = { _id: ObjectId(id) };
       const result = await orderCollection.deleteOne(query);
       res.send(result);
+    });
+
+    //get a single booking for payment
+    app.get("/orders/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: ObjectId(id) };
+      const result = await orderCollection.findOne(query);
+      res.send(result);
+    });
+    //payment
+    app.post("/create-payment-intent", async (req, res) => {
+      const service = req.body;
+      const price = service.price;
+      const amount = price * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({ clientSecret: paymentIntent.client_secret });
     });
 
     //insert a review
