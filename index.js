@@ -109,6 +109,21 @@ async function run() {
       const result = await partsCollection.find().toArray();
       res.send(result);
     });
+    // insert a parts
+    app.post("/part", async (req, res) => {
+      const order = req.body;
+      const result = await partsCollection.insertOne(order);
+      res.send(result);
+    });
+
+    //delete product
+    app.delete("/part/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await partsCollection.deleteOne(query);
+      res.send(result);
+    });
+
     //get one part find by id
     app.get("/part/:id", async (req, res) => {
       const id = req.params;
@@ -121,6 +136,11 @@ async function run() {
     app.post("/order", async (req, res) => {
       const order = req.body;
       const result = await orderCollection.insertOne(order);
+      res.send(result);
+    });
+    //get all orders
+    app.get("/orders", async (req, res) => {
+      const result = await orderCollection.find().toArray();
       res.send(result);
     });
 
@@ -140,31 +160,41 @@ async function run() {
       res.send(result);
     });
 
-    //get a single booking for payment
+    //get a single order for payment
     app.get("/orders/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       const query = { _id: ObjectId(id) };
       const result = await orderCollection.findOne(query);
       res.send(result);
     });
     //update order and insert payment after payment
-    app.put('/orders/:id',async(req,res)=>{
-      const id=req.params.id
-      const payment=req.body
-      const query={_id:ObjectId(id)}
-      const updatedDoc={
+    app.put("/orders/:id", async (req, res) => {
+      const id = req.params.id;
+      const payment = req.body;
+      const query = { _id: ObjectId(id) };
+      const updatedDoc = {
         $set: {
           paid: true,
-          transactionId: payment.transactionId
-        }
-      }
+          transactionId: payment.transactionId,
+        },
+      };
+      const result = await paymentCollection.insertOne(payment);
+      const updateOrder = await orderCollection.updateOne(query, updatedDoc);
+      res.send(updatedDoc);
+    });
 
-      const result=await paymentCollection.insertOne(payment)
-      const updateOrder=await orderCollection.updateOne(query,updatedDoc) 
-      res.send(updatedDoc)
-    })
-
+    //admin confirm payment
+    app.put("/order/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          shipped: true,
+        },
+      };
+      const result = await orderCollection.updateOne(query, updatedDoc);
+      res.send(result);
+    });
     //payment
     app.post("/create-payment-intent", async (req, res) => {
       const service = req.body;
