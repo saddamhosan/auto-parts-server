@@ -96,6 +96,28 @@ async function run() {
       res.send(result);
     });
 
+    //get user filtering email
+    app.get("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+    //update user for profile
+    app.put('/user/:email',async(req,res)=>{
+      const email = req.params.email;
+      const profile=req.body.profile
+      const query = { email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          profile
+        },
+      };
+      const result = await userCollection.updateOne(query, updateDoc, options);
+      res.send(result)
+    })
+
     //delete user
     app.delete("/user/:email", verifyJWT, verifyAdmin, async (req, res) => {
       const email = req.params.email;
