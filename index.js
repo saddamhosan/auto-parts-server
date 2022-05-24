@@ -66,7 +66,7 @@ async function run() {
       };
       const result = await userCollection.updateOne(query, updateDoc, options);
       const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN, {
-        expiresIn: "1h",
+        expiresIn: "2d",
       });
       res.send({ result, token });
     });
@@ -91,20 +91,20 @@ async function run() {
     });
 
     //get all users
-    app.get("/users", async (req, res) => {
+    app.get("/users",verifyJWT, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
 
     //get user filtering email
-    app.get("/user/:email", async (req, res) => {
+    app.get("/user/:email",verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { email };
       const result = await userCollection.findOne(query);
       res.send(result);
     });
     //update user for profile
-    app.put('/user/:email',async(req,res)=>{
+    app.put('/user/:email',verifyJWT,async(req,res)=>{
       const email = req.params.email;
       const profile=req.body.profile
       const query = { email };
@@ -132,14 +132,14 @@ async function run() {
       res.send(result);
     });
     // insert a parts
-    app.post("/part", async (req, res) => {
+    app.post("/part",verifyJWT,verifyAdmin, async (req, res) => {
       const order = req.body;
       const result = await partsCollection.insertOne(order);
       res.send(result);
     });
 
     //delete product
-    app.delete("/part/:id", async (req, res) => {
+    app.delete("/part/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await partsCollection.deleteOne(query);
@@ -147,7 +147,7 @@ async function run() {
     });
 
     //get one part find by id
-    app.get("/part/:id", async (req, res) => {
+    app.get("/part/:id",verifyJWT, async (req, res) => {
       const id = req.params;
       const query = { _id: ObjectId(id) };
       const result = await partsCollection.findOne(query);
@@ -155,13 +155,13 @@ async function run() {
     });
 
     // insert a order
-    app.post("/order", async (req, res) => {
+    app.post("/order",verifyJWT, async (req, res) => {
       const order = req.body;
       const result = await orderCollection.insertOne(order);
       res.send(result);
     });
     //get all orders
-    app.get("/orders", async (req, res) => {
+    app.get("/orders", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await orderCollection.find().toArray();
       res.send(result);
     });
@@ -189,7 +189,7 @@ async function run() {
       const result = await orderCollection.findOne(query);
       res.send(result);
     });
-    //update order and insert payment after payment
+    //update order and insert paid after payment
     app.put("/orders/:id", async (req, res) => {
       const id = req.params.id;
       const payment = req.body;
@@ -206,7 +206,7 @@ async function run() {
     });
 
     //admin confirm payment
-    app.put("/order/:id", async (req, res) => {
+    app.put("/order/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const updatedDoc = {
@@ -231,7 +231,7 @@ async function run() {
     });
 
     //insert a review
-    app.post("/review", async (req, res) => {
+    app.post("/review",verifyJWT, async (req, res) => {
       const review = req.body;
       const result = await reviewCollection.insertOne(review);
       res.send(result);
