@@ -167,7 +167,7 @@ async function run() {
     });
 
     //get order filtering by email
-    app.get("/order/:email", async (req, res) => {
+    app.get("/order/:email",verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { email };
       const result = await orderCollection.find(query).toArray();
@@ -175,7 +175,7 @@ async function run() {
     });
 
     //delete order
-    app.delete("/order/:id", async (req, res) => {
+    app.delete("/order/:id",verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await orderCollection.deleteOne(query);
@@ -183,14 +183,14 @@ async function run() {
     });
 
     //get a single order for payment
-    app.get("/orders/:id", async (req, res) => {
+    app.get("/orders/:id",verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await orderCollection.findOne(query);
       res.send(result);
     });
     //update order and insert paid after payment
-    app.put("/orders/:id", async (req, res) => {
+    app.put("/orders/:id",verifyJWT, async (req, res) => {
       const id = req.params.id;
       const payment = req.body;
       const query = { _id: ObjectId(id) };
@@ -218,7 +218,7 @@ async function run() {
       res.send(result);
     });
     //payment
-    app.post("/create-payment-intent", async (req, res) => {
+    app.post("/create-payment-intent",verifyJWT, async (req, res) => {
       const service = req.body;
       const price = service.price;
       const amount = price * 100;
